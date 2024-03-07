@@ -1,3 +1,3 @@
-hello
-this is line 2
-this is line 3
+IF hello THEN
+GOTO ah THE ELSE ah ELSEELSE
+FOR WHILE foo

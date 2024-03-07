@@ -4,23 +4,25 @@
 #include <vector>
 #include <fstream>
 
+#include "../include/utils.h"
 #include "../include/lexer.h"
 
 int main() {
-	std::ifstream file("tests/basic.txt");
-	if (!file.is_open()) {
-		std::cerr << "Unable to open file" << std::endl;
-		return -1;
+	auto result = readFile("tests/basic.txt");
+	if (!result.has_value()) {
+		std::cerr << "Failed to read file" << std::endl;
+		return EXIT_FAILURE;
 	}
-
-	std::stringstream codeStream;
-	codeStream << file.rdbuf();
-	std::string code = codeStream.str();
+	std::string code = result.value();
 
 	std::vector<Token> tokens;
 	Lexer lexer(code);
 	tokens = lexer.tokenize();
 
+	for (Token& i : tokens) {
+		std::cout << Lexer::tokenToString(i) << std::endl;
+	}
+
 	std::getchar();
-	return 0;
+	return EXIT_SUCCESS;
 }

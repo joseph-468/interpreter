@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <optional>
 
 enum class TokenType {
 	// Operators
@@ -22,7 +23,7 @@ enum class TokenType {
 	ELSE,
 	WHILE,
 	FOR,
-	RETURN,
+	GOTO,
 	// Literals
 	INTEGER,
 	FLOAT,
@@ -37,7 +38,7 @@ enum class TokenType {
 
 struct Token {
 	TokenType type;
-	std::string value;
+	std::optional<std::string> value;
 };
 
 class Lexer {
@@ -54,5 +55,9 @@ public:
 	static std::string tokenToString(const Token& token) noexcept;
 
 private:
+	std::optional<char> peek(const size_t offset = 0) const noexcept; 
+	char consume() noexcept;
+
 	std::string code;
+	size_t curr;
 };
