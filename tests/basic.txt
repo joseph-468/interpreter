@@ -1,3 +1,0 @@
-IF hello THEN
-GOTO ah THE ELSE ah ELSEELSE
-FOR WHILE foo

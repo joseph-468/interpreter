@@ -1,74 +1,200 @@
 #include "../include/lexer.h"
+#include "../include/utils.h"
 
 #include <iostream>
 #include <string>
 
-Lexer::Lexer(std::string& code) noexcept : code(code), curr(0)  {}
 
-std::optional<char> Lexer::peek(const size_t offset) const noexcept {
-	if (curr + offset >= code.length()) {
-		return std::nullopt;
-	}
-	return code.at(curr + offset);
-}
+namespace Lexer {
+	// Private
+	std::string code;
+	size_t curr;
 
-char Lexer::consume() noexcept {
-	return code.at(curr++);
-}
-
-std::vector<Token> Lexer::tokenize() noexcept {
-	std::vector<Token> tokens;
-	std::string buf;
-	while (peek().has_value()) {
-		if (isspace(peek().value())) {
-			consume();
+	inline std::optional<char> peek(const size_t offset = 0) noexcept {
+		if (curr + offset >= code.length()) {
+			return std::nullopt;
 		}
-		else if (isalpha(peek().value())) {
-			buf.push_back(consume());
-			while (peek().has_value() && isalnum(peek().value())) {
-				buf.push_back(consume());
-			}
+		return code.at(curr + offset);
+	}
 
-			TokenType type;
-			std::optional<std::string> value = std::nullopt;
-			if (buf == "IF") {
-				type = TokenType::IF;
+	inline char consume() noexcept {
+		return code.at(curr++);
+	}
+
+	// Public
+	std::vector<Token> tokenize(const std::string& source) noexcept {
+		code = source;
+		curr = 0;
+		std::vector<Token> tokens;
+		std::string buf;
+		while (peek().has_value()) {
+			if (isspace(peek().value())) {
+				consume();
 			}
-			else if (buf == "THEN") {
-				type = TokenType::THEN;
+			else if (peek().value() == '/' && peek(1).has_value() && peek(1).value() == '/') {
+				while (peek().has_value() && peek().value() != '\n') {
+					consume();
+				}
 			}
-			else if (buf == "ELSE") {
-				type = TokenType::ELSE;
+			else if (peek().value() == '/' && peek(1).has_value() && peek(1).value() == '*') {
+				while (peek().has_value()) {
+					if (peek().value() == '*' && peek(1).has_value() && peek(1).value() == '/') {
+						consume();
+						consume();
+						break;
+					}
+					consume();
+				}
 			}
-			else if (buf == "WHILE") {
-				type = TokenType::WHILE;
+			else if (peek().value() == '=' && peek(1).has_value() && peek(1).value() == '=') {
+				consume();
+				consume();
+				tokens.emplace_back(TokenType::EQUALITY, std::nullopt);
 			}
-			else if (buf == "FOR") {
-				type = TokenType::FOR;
+			else if (peek().value() == '!' && peek(1).has_value() && peek(1).value() == '=') {
+				consume();
+				consume();
+				tokens.emplace_back(TokenType::INEQUALITY, std::nullopt);
 			}
-			else if (buf == "GOTO") {
-				type = TokenType::GOTO;
+			else if (isalpha(peek().value())) {
+				buf.push_back(consume());
+				while (peek().has_value() && isalnum(peek().value())) {
+					buf.push_back(consume());
+				}
+				TokenType type;
+				std::optional<std::string> value = std::nullopt;
+				if (buf == "IF") {
+					type = TokenType::IF;
+				}
+				else if (buf == "THEN") {
+					type = TokenType::THEN;
+				}
+				else if (buf == "ELSE") {
+					type = TokenType::ELSE;
+				}
+				else if (buf == "WHILE") {
+					type = TokenType::WHILE;
+				}
+				else if (buf == "FOR") {
+					type = TokenType::FOR;
+				}
+				else if (buf == "GOTO") {
+					type = TokenType::GOTO;
+				}
+				else if (buf == "OR") {
+					type = TokenType::OR;
+				}
+				else if (buf == "AND") {
+					type = TokenType::AND;
+				}
+				else {
+					type = TokenType::IDENTIFIER;
+					value = buf;
+				}
+				tokens.emplace_back(type, value);
+				buf.clear();
+			}
+			else if (isdigit(peek().value())) {
+				TokenType type;
+				buf.push_back(consume());
+				while (peek().has_value() && isdigit(peek().value())) {
+					buf.push_back(consume());
+				}
+				if (peek().value() == '.') {
+					type = TokenType::FLOAT;
+					buf.push_back(consume());
+					while (peek().has_value() && isdigit(peek().value())) {
+						buf.push_back(consume());
+					}
+				}
+				else {
+					type = TokenType::INTEGER;
+				}
+				tokens.emplace_back(type, buf);
+				buf.clear();
+			}
+			else if (peek().value() == '"') {
+				consume();
+				while (peek().has_value()) {
+					if (peek().value() == '\\') {
+						consume();
+						buf.push_back(consume());
+					}
+					else {
+						if (peek().value() == '"') {
+							consume();
+							break;
+						}
+						buf.push_back(consume());
+					}
+				}
+				tokens.emplace_back(TokenType::STRING, buf);
+				buf.clear();
+			}
+			else if (peek().value() == '[') {
+				consume();
+				tokens.emplace_back(TokenType::LBRACKET, std::nullopt);
+			}
+			else if (peek().value() == ']') {
+				consume();
+				tokens.emplace_back(TokenType::LBRACKET, std::nullopt);
+			}
+			else if (peek().value() == '(') {
+				consume();
+				tokens.emplace_back(TokenType::LPAREN, std::nullopt);
+			}
+			else if (peek().value() == ')') {
+				consume();
+				tokens.emplace_back(TokenType::RPAREN, std::nullopt);
+			}
+			else if (peek().value() == '{') {
+				consume();
+				tokens.emplace_back(TokenType::LBRACE, std::nullopt);
+			}
+			else if (peek().value() == '}') {
+				consume();
+				tokens.emplace_back(TokenType::LBRACE, std::nullopt);
+			}
+			else if (peek().value() == '=') {
+				consume();
+				tokens.emplace_back(TokenType::ASSIGNMENT, std::nullopt);
+			}
+			else if (peek().value() == '+') {
+				consume();
+				tokens.emplace_back(TokenType::PLUS, std::nullopt);
+			}
+			else if (peek().value() == '-') {
+				consume();
+				tokens.emplace_back(TokenType::MINUS, std::nullopt);
+			}
+			else if (peek().value() == '*') {
+				consume();
+				tokens.emplace_back(TokenType::MULTIPLY, std::nullopt);
+			}
+			else if (peek().value() == '/') {
+				consume();
+				tokens.emplace_back(TokenType::DIVIDE, std::nullopt);
+			}
+			else if (peek().value() == '<') {
+				consume();
+				tokens.emplace_back(TokenType::LESSER, std::nullopt);
+			}
+			else if (peek().value() == '>') {
+				consume();
+				tokens.emplace_back(TokenType::GREATER, std::nullopt);
 			}
 			else {
-				type = TokenType::IDENTIFIER;
-				value = buf;
+				std::cerr << "Invalid token \"" << peek().value() << "\"found" << std::endl;
+				exit(EXIT_FAILURE);
 			}
+		}
 
-			tokens.emplace_back(type, value);
-			buf.clear();
-		}
-		// Temporary
-		else {
-			consume();
-		}
+		return tokens;
 	}
 
-	return tokens;
-}
-
-std::string Lexer::tokenToString(const Token& token) noexcept {
-	std::string tokenStr;
-	switch (token.type) {
+	std::string tokenToString(const Token& token) noexcept {
+		std::string tokenStr;
+		switch (token.type) {
 		case TokenType::ASSIGNMENT: tokenStr = "="; break;
 		case TokenType::EQUALITY: tokenStr = "=="; break;
 		case TokenType::INEQUALITY: tokenStr = "!="; break;
@@ -94,9 +220,12 @@ std::string Lexer::tokenToString(const Token& token) noexcept {
 		case TokenType::RBRACKET: tokenStr = "]"; break;
 		case TokenType::LPAREN: tokenStr = "("; break;
 		case TokenType::RPAREN: tokenStr = ")"; break;
+		case TokenType::LBRACE: tokenStr = "{"; break;
+		case TokenType::RBRACE: tokenStr = "}"; break;
+		}
+		if (token.value.has_value()) {
+			tokenStr += ": " + token.value.value();
+		}
+		return tokenStr;
 	}
-	if (token.value.has_value()) {
-		tokenStr += ": " + token.value.value();
-	}
-	return tokenStr;
 }

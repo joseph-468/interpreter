@@ -1,0 +1,24 @@
+= == != OR AND + - * / < >
+IF THEN ELSE WHILE FOR GOTO
+() [] {}
+
+2349
+23498
+00034
+
+29834.343498
+0.343
+34.4
+
+"string"
+""
+"escapes \" work "
+
+// Comment
+// "you can't see this string"
+foo // Variable name
+bar /* Also a variable name */
+/*
+Multi line comments
+also work :)
+/*

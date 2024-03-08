@@ -1,8 +1,11 @@
 #pragma once
 
+#include "../include/utils.h"
+
 #include <string>
 #include <vector>
 #include <optional>
+#include <utility>
 
 enum class TokenType {
 	// Operators
@@ -34,6 +37,8 @@ enum class TokenType {
 	RBRACKET,
 	LPAREN,
 	RPAREN,
+	LBRACE,
+	RBRACE,
 };
 
 struct Token {
@@ -41,23 +46,7 @@ struct Token {
 	std::optional<std::string> value;
 };
 
-class Lexer {
-public:
-	Lexer() = delete;
-	Lexer(const Lexer& other) = delete;
-	Lexer(const Lexer&& other) = delete;
-	Lexer operator=(const Lexer& other) = delete;
-	Lexer operator=(const Lexer&& other) = delete;
-
-	explicit Lexer(std::string& code) noexcept;
-	std::vector<Token> tokenize() noexcept;
-
-	static std::string tokenToString(const Token& token) noexcept;
-
-private:
-	std::optional<char> peek(const size_t offset = 0) const noexcept; 
-	char consume() noexcept;
-
-	std::string code;
-	size_t curr;
-};
+namespace Lexer {
+	std::vector<Token> tokenize(const std::string& source) noexcept;
+	std::string tokenToString(const Token& token) noexcept;
+}
